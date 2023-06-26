@@ -106,8 +106,8 @@ github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
-github.com/oasdiff/go-common v0.0.6 h1:OimDjXq6YocU0M2CfR51SDLSSj8dqOGONwz3d7/s1yo=
-github.com/oasdiff/go-common v0.0.6/go.mod h1:YxJoj9cZqtSl6oD4xmzIJge7fbx6Qrnb5HY4cUTb0dA=
+github.com/oasdiff/go-common v0.0.9 h1:AB3a0MZVAJjWraZrgilD/yzBknnl72ETGwoYtIreb5I=
+github.com/oasdiff/go-common v0.0.9/go.mod h1:YxJoj9cZqtSl6oD4xmzIJge7fbx6Qrnb5HY4cUTb0dA=
 github.com/perimeterx/marshmallow v1.1.4 h1:pZLDH9RjlLGGorbXhcaQLhfuV0pFMNfPO55FuFkxqLw=
 github.com/perimeterx/marshmallow v1.1.4/go.mod h1:dsXbUu8CRzfYP5a87xpp0xq9S3u0Vchtcl8we9tYaXw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

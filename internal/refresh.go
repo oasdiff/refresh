@@ -16,9 +16,17 @@ import (
 	"github.com/tufin/oasdiff/load"
 )
 
-type Callback struct{}
+type WebhookBreakingChanges struct {
+	Name            string                               `json:"name"`
+	BreakingChanges []checker.BackwardCompatibilityError `json:"breaking_changes"`
+}
 
 func Run(dsc ds.Client, store gcs.Client) error {
+
+	tenantIdToTenant, err := getTenants(dsc)
+	if err != nil {
+		return err
+	}
 
 	var webhooks []ds.Webhook
 	if err := dsc.GetAll(ds.KindWebhook, &webhooks); err != nil {
@@ -40,30 +48,57 @@ func Run(dsc ds.Client, store gcs.Client) error {
 			continue
 		}
 		if len(breakingChanges) > 0 {
-			_ = notify(breakingChanges, currWebhook.Callback)
+			tenant, ok := tenantIdToTenant[currWebhook.TenantId]
+			if !ok {
+				logrus.Errorf("tenant not found for webhook '%s'", currWebhook.TenantId)
+				continue
+			}
+			_ = notify(tenant, currWebhook.Name, breakingChanges)
 		}
 	}
 
 	return nil
 }
 
-func notify(breakingChanges []checker.BackwardCompatibilityError, callbackUrl string) error {
+func getTenants(dsc ds.Client) (map[string]ds.Tenant, error) {
 
-	payload, err := json.Marshal(map[string][]checker.BackwardCompatibilityError{
-		"breaking-changes": breakingChanges})
-	if err != nil {
-		logrus.Errorf("failed to json marshal 'breaking-changes' with '%v'", err)
-		return err
+	var tenants []ds.Tenant
+	if err := dsc.GetAll(ds.KindTenant, &tenants); err != nil {
+		return nil, err
 	}
-	response, err := http.Post(callbackUrl, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
-		logrus.Errorf("failed to send 'breaking-changes' report with '%v'", err)
-		return err
+
+	return toTenantIdToTenant(tenants), nil
+}
+
+func toTenantIdToTenant(tenants []ds.Tenant) map[string]ds.Tenant {
+
+	res := make(map[string]ds.Tenant, len(tenants))
+	for _, currTenant := range tenants {
+		res[currTenant.Id] = currTenant
 	}
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
-		err := fmt.Errorf("failed to send 'breaking-changes' report to webhook with '%s'", response.Status)
-		logrus.Info(err.Error())
-		return err
+
+	return res
+}
+
+func notify(tenant ds.Tenant, webhookName string, changes []checker.BackwardCompatibilityError) error {
+
+	if tenant.Callback != "" {
+		payload, err := json.Marshal(map[string][]WebhookBreakingChanges{
+			"webhooks": {{Name: webhookName, BreakingChanges: changes}}})
+		if err != nil {
+			logrus.Errorf("[notify] failed to json marshal 'WebhookBreakingChanges' with '%v' tenant '%s', webhook '%s'", err, tenant.Id, webhookName)
+			return err
+		}
+		response, err := http.Post(tenant.Callback, "application/json", bytes.NewBuffer(payload))
+		if err != nil {
+			logrus.Errorf("[notify] failed to send 'WebhookBreakingChanges' json with '%v' tenant '%s', webhook '%s'", err, tenant.Id, webhookName)
+			return err
+		}
+		if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+			err := fmt.Errorf("[notify] failed to send 'WebhookBreakingChanges' report to webhook with '%s' tenant '%s', webhook '%s'", response.Status, tenant.Id, webhookName)
+			logrus.Info(err.Error())
+			return err
+		}
 	}
 
 	return nil
